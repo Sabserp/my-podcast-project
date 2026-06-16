@@ -18,8 +18,8 @@ function buildScript(articles) {
     const num = ['First', 'Second', 'Third', 'Fourth', 'Fifth'][i] || `Story ${i + 1}`;
     const byline = article.author !== 'Unknown' ? ` by ${article.author}` : '';
     const source = article.domain ? ` from ${article.domain}` : '';
-    // Trim body to ~3000 chars so TTS stays under limits
-    const body = article.bodyText.slice(0, 3000);
+    // Trim body to stay well under free tier 10k character limit
+    const body = article.bodyText.slice(0, 1500);
     return `${num} story${byline}${source}: "${article.title}".\n\n${body}`;
   });
 
@@ -94,9 +94,14 @@ router.post('/generate', async (req, res) => {
     db.get('podcasts').push(podcast).write();
     res.status(201).json(podcast);
   } catch (err) {
-    const detail = err.response
-      ? `ElevenLabs ${err.response.status}: ${Buffer.from(err.response.data).toString()}`
-      : err.message;
+    let detail = err.message;
+    if (err.response) {
+      const body = Buffer.isBuffer(err.response.data)
+        ? Buffer.from(err.response.data).toString()
+        : JSON.stringify(err.response.data);
+      detail = `ElevenLabs ${err.response.status}: ${body}`;
+    }
+    console.error('Podcast generation error:', detail);
     res.status(502).json({ error: 'Audio generation failed', detail });
   }
 });
