@@ -1,0 +1,70 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon { font-size: 1.5rem; }
+
+.header-brand h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--accent-light);
+}
+
+.header-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.app-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.app-nav button {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: var(--font);
+  transition: all 0.15s;
+}
+
+.app-nav button:hover { color: var(--text); background: var(--surface2); }
+.app-nav button.active {
+  color: var(--accent-light);
+  border-color: var(--accent);
+  background: rgba(124,106,247,0.12);
+}
+
+.app-main {
+  flex: 1;
+  padding: 32px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
