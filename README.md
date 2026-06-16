@@ -1,46 +1,91 @@
-# My Podcast Project
+# Auditory — Journalism to Podcast
 
-An auditory learning application for consuming educational content through podcasts.
+Turn your favorite journalism links into audio podcasts using ElevenLabs text-to-speech.
 
-## Features
+## How it works
 
-- Browse and play podcast episodes
-- Organize content by topic or learning goal
-- Track listening progress
+1. Paste article URLs into your library — the app scrapes the title, author, date, and full text
+2. Select one or more articles and click **Generate Podcast**
+3. ElevenLabs converts the content to natural speech — listen in the app
 
-## Getting Started
+## Tech stack
+
+- **Frontend**: React
+- **Backend**: Node.js / Express
+- **Database**: lowdb (local JSON file)
+- **Audio**: ElevenLabs TTS API
+- **Scraping**: axios + cheerio
+
+## Getting started
 
 ### Prerequisites
 
-- Node.js (v18 or higher recommended)
+- Node.js v18+
+- An [ElevenLabs](https://elevenlabs.io) account and API key
 
-### Installation
+### 1. Install dependencies
 
 ```bash
-git clone <your-repo-url>
-cd my-podcast-project
 npm install
+cd server && npm install
+cd ../client && npm install
 ```
 
-### Running the App
+### 2. Configure environment
 
 ```bash
-npm start
+cp server/.env.example server/.env
 ```
 
-## Project Structure
+Edit `server/.env` and add your ElevenLabs API key:
+
+```
+ELEVENLABS_API_KEY=your_key_here
+```
+
+### 3. Run the app
+
+```bash
+npm run dev
+```
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000
+
+## Project structure
 
 ```
 my-podcast-project/
-├── src/        # Application source code
-├── public/     # Static assets
+├── client/               # React frontend
+│   └── src/
+│       ├── App.js
+│       └── components/
+│           ├── ArticleLibrary.js   # Add & browse articles
+│           └── PodcastPlayer.js    # Audio player
+├── server/               # Express backend
+│   ├── index.js
+│   ├── db.js             # lowdb setup
+│   ├── audio/            # Generated MP3s (gitignored)
+│   └── routes/
+│       ├── articles.js   # Scrape & store articles
+│       └── podcasts.js   # Generate audio via ElevenLabs
 └── README.md
 ```
 
-## Contributing
+## Data model
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.
+Each article stores both structured and unstructured data:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | UUID |
+| `url` | string | Original link |
+| `title` | string | Structured — scraped from og:title |
+| `author` | string | Structured — scraped from meta |
+| `publishedAt` | string | Structured — ISO date |
+| `domain` | string | Structured — e.g. nytimes.com |
+| `bodyText` | string | Unstructured — raw article body |
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+MIT

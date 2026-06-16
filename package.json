@@ -1,0 +1,13 @@
+{
+  "name": "my-podcast-project",
+  "version": "1.0.0",
+  "description": "Auditory learning app — turn journalism links into podcasts",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/index.js",
+    "client": "npm start --prefix client"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
