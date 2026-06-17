@@ -1,10 +1,58 @@
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const dns = require('dns').promises;
+const net = require('net');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 
 const router = express.Router();
+
+// SSRF protection: block requests to private/internal IP ranges
+function isPrivateIP(ip) {
+  const privateRanges = [
+    /^127\./,           // loopback
+    /^10\./,            // private class A
+    /^172\.(1[6-9]|2\d|3[01])\./,  // private class B
+    /^192\.168\./,      // private class C
+    /^169\.254\./,      // link-local
+    /^::1$/,            // IPv6 loopback
+    /^fc00:/,           // IPv6 private
+    /^fe80:/,           // IPv6 link-local
+  ];
+  return privateRanges.some(range => range.test(ip));
+}
+
+async function validatePublicURL(urlString) {
+  let parsed;
+  try {
+    parsed = new URL(urlString);
+  } catch {
+    throw new Error('Invalid URL format');
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('Only http and https URLs are allowed');
+  }
+
+  const hostname = parsed.hostname;
+
+  // Block raw IP addresses that are private
+  if (net.isIP(hostname)) {
+    if (isPrivateIP(hostname)) {
+      throw new Error('Requests to private IP addresses are not allowed');
+    }
+    return;
+  }
+
+  // Resolve hostname and check all returned IPs
+  const addresses = await dns.lookup(hostname, { all: true });
+  for (const { address } of addresses) {
+    if (isPrivateIP(address)) {
+      throw new Error(`Hostname "${hostname}" resolves to a private IP address`);
+    }
+  }
+}
 
 // Scrape metadata + body text from a URL
 async function scrapeArticle(url) {
@@ -61,6 +109,13 @@ router.get('/', (req, res) => {
 router.post('/', async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'url is required' });
+
+  // SSRF check — ensure URL resolves to a public address
+  try {
+    await validatePublicURL(url);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   // Prevent duplicates
   const existing = db.get('articles').find({ url }).value();

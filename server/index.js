@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 const articlesRouter = require('./routes/articles');
 const podcastsRouter = require('./routes/podcasts');
@@ -16,6 +17,23 @@ if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir);
 
 app.use(cors());
 app.use(express.json());
+
+// General API rate limit: 60 requests per minute
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { error: 'Too many requests, please slow down.' },
+});
+
+// Strict limit on podcast generation: 5 per hour to protect ElevenLabs quota
+const generateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: 'Podcast generation limit reached. Try again in an hour.' },
+});
+
+app.use('/api/', generalLimiter);
+app.use('/api/podcasts/generate', generateLimiter);
 
 // Serve generated audio files statically
 app.use('/audio', express.static(audioDir));
